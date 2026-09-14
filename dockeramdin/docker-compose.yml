@@ -1,0 +1,12 @@
+services:
+  dockeramdin:
+    image: dockeradmin:latest
+    container_name: dockeramdin
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "33001:33001"
+    volumes:
+      - ./cgi-bin/dockeradmin.cgi:/var/run/cgi-bin/dockeradmin.cgi
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: "busybox httpd -v -f -p 33001 -h /var/run/"
