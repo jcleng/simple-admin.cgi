@@ -4,6 +4,8 @@
 
 把对应服务`.cgi`文件放到`/var/run/cgi-bin`目录,通过`busybox httpd -v -f -p 33001 -h /var/run/`运行管理界面
 
+访问: `http://127.0.0.1:33001/cgi-bin/dockeradmin.cgi`
+
 ## ✨ 功能特性
 
 - 🔐 Cookie 认证登录：支持用户名/密码验证，默认凭据可通过环境变量自定义
