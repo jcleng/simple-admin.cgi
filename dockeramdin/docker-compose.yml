@@ -1,6 +1,6 @@
 services:
   dockeramdin:
-    image: dockeradmin:latest
+    image: registry.cn-hangzhou.aliyuncs.com/jcleng/dockeradmin
     container_name: dockeramdin
     environment:
       - TZ=Asia/Shanghai
