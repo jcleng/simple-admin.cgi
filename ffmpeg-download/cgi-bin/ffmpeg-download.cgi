@@ -16,11 +16,6 @@ else
     DLOK=0
 fi
 
-case "$DL_DIR" in
-    "$ROOT"/*) DL_WEB="/${DL_DIR#"$ROOT/"}" ;;
-    *) DL_WEB="/downloads" ;;
-esac
-
 # ========== HTTP 工具函数 ==========
 header() {
     printf "Content-Type: text/html; charset=utf-8\r\n\r\n"
@@ -332,7 +327,7 @@ for NAME in $TASKS; do
         echo "<td>$([ -n "$META" ] && echo "<sub>$META</sub>")</td>"
     fi
     if [ "$STATUS" = "done" ] && [ -f "$DL_DIR/$NAME.jpg" ]; then
-        echo "<td><a href=\"${DL_WEB}/$ESC.jpg\" target=\"_blank\"><img class=\"pv\" src=\"${DL_WEB}/$ESC.jpg\" alt=\"preview\"></a></td>"
+        echo "<td><a href=\"/downloads/$ESC.jpg\" target=\"_blank\"><img class=\"pv\" src=\"/downloads/$ESC.jpg\" alt=\"preview\"></a></td>"
     elif [ -f "$DL_DIR/$NAME.mp4" ]; then
         echo "<td><sub>生成中...</sub></td>"
     else
@@ -340,7 +335,7 @@ for NAME in $TASKS; do
     fi
     echo "<td>"
     if [ -f "$DL_DIR/$NAME.mp4" ]; then
-        echo "<a class=\"dl\" href=\"${DL_WEB}/$ESC.mp4\">下载视频</a>"
+        echo "<a class=\"dl\" href=\"/downloads/$ESC.mp4\">下载视频</a>"
     fi
     if [ "$STATUS" != "downloading" ]; then
         echo "<a class=\"del\" href=\"/cgi-bin/ffmpeg-download.cgi?act=delete&name=$ESC\" onclick=\"return confirm('删除 $ESC 的所有文件?')\">删除</a>"
