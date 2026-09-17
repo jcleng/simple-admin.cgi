@@ -6,8 +6,15 @@ PASS="${FFMPEG_PASS:-admin}"
 COOKIE_NAME="ffdl"
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(dirname "$SCRIPT_DIR")
-DL_DIR="$ROOT/downloads"
+DL_DIR="${FFMPEG_DL_DIR:-$ROOT/downloads}"
+chmod 777 "$ROOT" 2>/dev/null
 mkdir -p "$DL_DIR"
+chmod 777 "$DL_DIR" 2>/dev/null
+if [ -d "$DL_DIR" ] && [ -w "$DL_DIR" ]; then
+    DLOK=1
+else
+    DLOK=0
+fi
 
 # ========== HTTP 工具函数 ==========
 header() {
@@ -24,7 +31,30 @@ html_escape() {
 }
 
 urldecode() {
-    printf '%b' "$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/+/ /g; s/%/\\x/g')"
+    printf '%s' "$1" | awk '
+    function hx(c,  v) {
+        if (c ~ /^[0-9]$/) return c + 0
+        if (c ~ /^[a-f]$/) return 10 + index("abcdef", c) - 1
+        if (c ~ /^[A-F]$/) return 10 + index("ABCDEF", c) - 1
+        return -1
+    }
+    {
+        n = length($0)
+        for (i = 1; i <= n; i++) {
+            c = substr($0, i, 1)
+            if (c == "+") { printf " "; continue }
+            if (c == "%" && i + 2 <= n) {
+                hi = hx(substr($0, i + 1, 1))
+                lo = hx(substr($0, i + 2, 1))
+                if (hi >= 0 && lo >= 0) {
+                    printf "%c", hi * 16 + lo
+                    i += 2
+                    continue
+                }
+            }
+            printf "%s", c
+        }
+    }'
 }
 
 # ========== Cookie / Auth ==========
@@ -38,7 +68,7 @@ fi
 # ========== 登录处理 ==========
 if [ "$AUTH_OK" -eq 0 ]; then
     if [ "$REQUEST_METHOD" = "POST" ]; then
-        read -r -n "$CONTENT_LENGTH" POST_DATA
+        POST_DATA=$(dd bs=1 count="${CONTENT_LENGTH:-0}" 2>/dev/null)
         U=$(echo "$POST_DATA" | sed 's/.*u=\([^&]*\).*/\1/')
         P=$(echo "$POST_DATA" | sed 's/.*p=\([^&]*\).*/\1/')
 
@@ -79,7 +109,7 @@ fi
 
 # ========== 读取请求参数 ==========
 if [ "$REQUEST_METHOD" = "POST" ]; then
-    read -r -n "$CONTENT_LENGTH" POST_DATA 2>/dev/null
+    POST_DATA=$(dd bs=1 count="${CONTENT_LENGTH:-0}" 2>/dev/null)
     INPUT="$POST_DATA"
 else
     INPUT="$QUERY_STRING"
@@ -108,6 +138,10 @@ esac
 
 # ========== 提交下载任务 ==========
 if echo "$INPUT" | grep -q 'url='; then
+    if [ "$DLOK" -ne 1 ]; then
+        redirect "/cgi-bin/ffmpeg-download.cgi?msg=nodir"
+    fi
+
     URLRAW=$(echo "$INPUT" | sed 's/.*url=\([^&]*\).*/\1/')
     URL=$(urldecode "$URLRAW" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
 
@@ -176,6 +210,7 @@ MSGWORD=""
 case "$(echo "$QUERY_STRING" | sed 's/.*msg=\([^&]*\).*/\1/')" in
     started)  MSGWORD="下载任务已在后台启动，请稍候刷新查看进度" ;;
     invalid)  MSGWORD="请输入有效的视频 URL 地址" ;;
+    nodir)    MSGWORD="下载目录不可写（$DL_DIR），无法开始下载" ;;
     active)   MSGWORD="该任务正在下载中，请勿重复提交" ;;
     busy)     MSGWORD="任务正在下载中，无法删除" ;;
     deleted)  MSGWORD="已删除该任务" ;;
