@@ -236,7 +236,7 @@ cat <<EOF
 <!doctype html>
 <html><head><meta charset="utf-8"><title>FFmpeg 视频下载</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="refresh" content="4">
+<meta http-equiv="refresh" content="30">
 <style>
 body{font-family:system-ui;padding:20px;background:#f7f7f7;max-width:980px;margin:0 auto}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
